@@ -2,21 +2,19 @@
 #define KRIVOSHAPOV_NAMED_SEQ_HPP
 
 #include <string>
-#include "list.hpp"
+#include "../common/list.hpp"
 
-namespace krivoshapov
-{
+namespace krivoshapov {
 
-  struct NamedSeq
-  {
-    std::string name;
-    List<size_t> nums;
+struct NamedSeq {
+  std::string name;
+  List< size_t > nums;
 
-    explicit NamedSeq(const std::string &n) : name(n),
-                                              nums()
-    {
-    }
-  };
+  explicit NamedSeq(const std::string & n):
+    name(n),
+    nums()
+  {}
+};
 
 }
 
