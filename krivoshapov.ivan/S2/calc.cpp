@@ -95,6 +95,7 @@ namespace krivoshapov
     {
       Queue<std::string> output;
       Stack<std::string> ops;
+      bool expect_operand = true;
 
       size_t i = 0;
       while (i < line.size())
@@ -117,10 +118,19 @@ namespace krivoshapov
 
         if (tok == "(")
         {
+          if (!expect_operand)
+          {
+            throw std::invalid_argument("invalid expression");
+          }
           ops.push(tok);
         }
         else if (tok == ")")
         {
+          if (expect_operand)
+          {
+            throw std::invalid_argument("invalid expression");
+          }
+          expect_operand = false;
           bool found = false;
           while (!ops.empty())
           {
@@ -140,6 +150,11 @@ namespace krivoshapov
         }
         else if (is_op(tok))
         {
+          if (expect_operand)
+          {
+            throw std::invalid_argument("invalid expression");
+          }
+          expect_operand = true;
           while (!ops.empty() && ops.top() != "(" && prio(ops.top()) >= prio(tok))
           {
             output.push(ops.top());
@@ -149,9 +164,19 @@ namespace krivoshapov
         }
         else
         {
+          if (!expect_operand)
+          {
+            throw std::invalid_argument("invalid expression");
+          }
+          expect_operand = false;
           to_number(tok);
           output.push(tok);
         }
+      }
+
+      if (expect_operand)
+      {
+        throw std::invalid_argument("invalid expression");
       }
 
       while (!ops.empty())
