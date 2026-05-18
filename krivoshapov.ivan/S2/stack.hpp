@@ -10,6 +10,18 @@ namespace krivoshapov
   template <typename T>
   class Stack
   {
+  public:
+    Stack() : data_(nullptr),
+              size_(0),
+              cap_(0)
+    {
+    }
+
+    ~Stack()
+    {
+      deallocate(data_);
+    }
+
   private:
     T *data_;
     size_t size_;
