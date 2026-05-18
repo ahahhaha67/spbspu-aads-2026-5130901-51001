@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include "commands.hpp"
 
 int main(int argc, char **argv)
 {
@@ -12,6 +13,17 @@ int main(int argc, char **argv)
   if (!file.is_open())
   {
     std::cerr << "ERROR: cannot open file\n";
+    return 1;
+  }
+  krivoshapov::GraphStore store(16);
+  try
+  {
+    krivoshapov::loadGraphs(file, store);
+    krivoshapov::runCommands(std::cin, std::cout, store);
+  }
+  catch (const std::exception &e)
+  {
+    std::cerr << "ERROR: " << e.what() << "\n";
     return 1;
   }
   return 0;
