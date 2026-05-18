@@ -31,6 +31,24 @@ namespace krivoshapov
       return vertices_.has(name);
     }
 
+    void addEdge(const std::string &a, const std::string &b, size_t w)
+    {
+      addVertex(a);
+      addVertex(b);
+      VertexPair key(a, b);
+      if (edges_.has(key))
+      {
+        edges_.at(key).push_back(w);
+      }
+      else
+      {
+        growEdges();
+        Weights ws;
+        ws.push_back(w);
+        edges_.add(key, ws);
+      }
+    }
+
   private:
     using VertexSet = HashTable<std::string, char, StringHash, StringEqual>;
     using EdgeMap = HashTable<VertexPair, Weights, PairHash, PairEqual>;
@@ -43,6 +61,14 @@ namespace krivoshapov
       if (vertices_.size() * 10 >= vertices_.slotCount() * 7)
       {
         vertices_.rehash(vertices_.slotCount() * 2);
+      }
+    }
+
+    void growEdges()
+    {
+      if (edges_.size() * 10 >= edges_.slotCount() * 7)
+      {
+        edges_.rehash(edges_.slotCount() * 2);
       }
     }
   };
