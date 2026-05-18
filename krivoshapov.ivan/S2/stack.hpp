@@ -17,9 +17,44 @@ namespace krivoshapov
     {
     }
 
+    Stack(const Stack &rhs) : data_(nullptr),
+                              size_(0),
+                              cap_(0)
+    {
+      if (rhs.size_ != 0)
+      {
+        T *buf = allocate(rhs.cap_);
+        try
+        {
+          for (size_t i = 0; i < rhs.size_; ++i)
+          {
+            buf[i] = rhs.data_[i];
+          }
+        }
+        catch (...)
+        {
+          deallocate(buf);
+          throw;
+        }
+        data_ = buf;
+        size_ = rhs.size_;
+        cap_ = rhs.cap_;
+      }
+    }
+
     ~Stack()
     {
       deallocate(data_);
+    }
+
+    Stack &operator=(const Stack &rhs)
+    {
+      if (this != &rhs)
+      {
+        Stack tmp(rhs);
+        swap(tmp);
+      }
+      return *this;
     }
 
     void push(const T &value)
