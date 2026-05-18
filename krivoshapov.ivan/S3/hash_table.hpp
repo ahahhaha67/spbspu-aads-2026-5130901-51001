@@ -91,7 +91,9 @@ namespace krivoshapov
     {
     }
 
-    explicit HashTable(size_t slots) : slots_(nullptr), pairs_(nullptr), cap_(slots < 1 ? 1 : slots), size_(0), tomb_(0)
+    explicit HashTable(size_t slots)
+        : slots_(nullptr), pairs_(nullptr),
+          cap_(slots < 1 ? 1 : slots), size_(0), tomb_(0)
     {
       slots_ = new Slot[cap_];
       pairs_ = static_cast<Pair *>(::operator new(cap_ * sizeof(Pair)));
@@ -108,8 +110,9 @@ namespace krivoshapov
       }
     }
 
-    HashTable(HashTable &&rhs) noexcept : slots_(rhs.slots_), pairs_(rhs.pairs_), cap_(rhs.cap_),
-                                          size_(rhs.size_), tomb_(rhs.tomb_)
+    HashTable(HashTable &&rhs) noexcept
+        : slots_(rhs.slots_), pairs_(rhs.pairs_),
+          cap_(rhs.cap_), size_(rhs.size_), tomb_(rhs.tomb_)
     {
       rhs.slots_ = nullptr;
       rhs.pairs_ = nullptr;

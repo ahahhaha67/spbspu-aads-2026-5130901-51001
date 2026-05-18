@@ -80,7 +80,9 @@ int main()
     g.addEdge("c", "a", 30);
     g.addEdge("c", "b", 20);
     Graph::Adjacency o = g.outbound("c");
-    check(o.size() == 2 && o[0].first == "a" && o[0].second[0] == 30 && o[1].first == "b", "graph.outbound");
+    check(o.size() == 2 && o[0].first == "a"
+          && o[0].second[0] == 30 && o[1].first == "b",
+          "graph.outbound");
     Graph::Adjacency in = g.inbound("b");
     check(in.size() == 2 && in[0].first == "a" && in[1].first == "c",
           "graph.inbound");

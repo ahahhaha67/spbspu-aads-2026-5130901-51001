@@ -110,7 +110,8 @@ namespace krivoshapov
     inline void cmdCut(GraphStore &s, const Array<std::string> &t, std::ostream &out)
     {
       size_t w = 0;
-      if (t.size() != 5 || !s.has(t[1]) || !parseSizeT(t[4], w) || !s.at(t[1]).cutEdge(t[2], t[3], w))
+      if (t.size() != 5 || !s.has(t[1]) || !parseSizeT(t[4], w)
+          || !s.at(t[1]).cutEdge(t[2], t[3], w))
       {
         printInvalid(out);
         return;

@@ -58,7 +58,10 @@ namespace krivoshapov
       uint32_t w[80];
       for (int i = 0; i < 16; ++i)
       {
-        w[i] = (static_cast<uint32_t>(block[i * 4]) << 24) | (static_cast<uint32_t>(block[i * 4 + 1]) << 16) | (static_cast<uint32_t>(block[i * 4 + 2]) << 8) | static_cast<uint32_t>(block[i * 4 + 3]);
+        w[i] = (static_cast<uint32_t>(block[i * 4]) << 24)
+             | (static_cast<uint32_t>(block[i * 4 + 1]) << 16)
+             | (static_cast<uint32_t>(block[i * 4 + 2]) << 8)
+             | static_cast<uint32_t>(block[i * 4 + 3]);
       }
       for (int i = 16; i < 80; ++i)
       {
