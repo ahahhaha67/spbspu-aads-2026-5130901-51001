@@ -45,6 +45,51 @@ namespace krivoshapov
       }
       return value;
     }
+
+    size_t apply(const std::string &op, size_t a, size_t b)
+    {
+      if (op == "+")
+      {
+        if (a > static_cast<size_t>(-1) - b)
+        {
+          throw std::invalid_argument("addition overflow");
+        }
+        return a + b;
+      }
+      if (op == "-")
+      {
+        if (a < b)
+        {
+          throw std::invalid_argument("subtraction underflow");
+        }
+        return a - b;
+      }
+      if (op == "*")
+      {
+        if (a != 0 && b > static_cast<size_t>(-1) / a)
+        {
+          throw std::invalid_argument("multiplication overflow");
+        }
+        return a * b;
+      }
+      if (op == "/")
+      {
+        if (b == 0)
+        {
+          throw std::invalid_argument("division by zero");
+        }
+        return a / b;
+      }
+      if (op == "%")
+      {
+        if (b == 0)
+        {
+          throw std::invalid_argument("modulo by zero");
+        }
+        return a % b;
+      }
+      return a | b;
+    }
   }
 
   bool is_blank(const std::string &line)
