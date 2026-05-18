@@ -22,7 +22,9 @@ namespace krivoshapov
       State st;
       Key key;
       Value val;
-      Slot() : st(EMPTY), key(), val() {}
+      Slot() : st(EMPTY), key(), val()
+      {
+      }
     };
 
   public:
@@ -32,10 +34,19 @@ namespace krivoshapov
       friend class HashTable;
 
     public:
-      IteratorBase() : owner_(nullptr), idx_(0) {}
+      IteratorBase() : owner_(nullptr), idx_(0)
+      {
+      }
 
-      Ref &operator*() const { return owner_->pairs_[idx_]; }
-      Ref *operator->() const { return std::addressof(owner_->pairs_[idx_]); }
+      Ref &operator*() const
+      {
+        return owner_->pairs_[idx_];
+      }
+
+      Ref *operator->() const
+      {
+        return std::addressof(owner_->pairs_[idx_]);
+      }
 
       IteratorBase &operator++()
       {
@@ -58,7 +69,10 @@ namespace krivoshapov
       Owner *owner_;
       size_t idx_;
 
-      IteratorBase(Owner *o, size_t i) : owner_(o), idx_(i) { skip(); }
+      IteratorBase(Owner *o, size_t i) : owner_(o), idx_(i)
+      {
+        skip();
+      }
 
       void skip()
       {
@@ -73,7 +87,9 @@ namespace krivoshapov
     using iterator = IteratorBase<HashTable, Pair>;
     using const_iterator = IteratorBase<const HashTable, const Pair>;
 
-    HashTable() : HashTable(8) {}
+    HashTable() : HashTable(8)
+    {
+    }
 
     explicit HashTable(size_t slots) : slots_(nullptr), pairs_(nullptr), cap_(slots < 1 ? 1 : slots), size_(0), tomb_(0)
     {
@@ -131,9 +147,15 @@ namespace krivoshapov
       return *this;
     }
 
-    ~HashTable() { destroy(); }
+    ~HashTable()
+    {
+      destroy();
+    }
 
-    bool has(const Key &k) const { return findIndex(k) != cap_; }
+    bool has(const Key &k) const
+    {
+      return findIndex(k) != cap_;
+    }
 
     void add(const Key &k, const Value &v)
     {
@@ -221,16 +243,50 @@ namespace krivoshapov
       swap(tmp);
     }
 
-    size_t size() const noexcept { return size_; }
-    size_t slotCount() const noexcept { return cap_; }
-    bool empty() const noexcept { return size_ == 0; }
+    size_t size() const noexcept
+    {
+      return size_;
+    }
 
-    iterator begin() { return iterator(this, 0); }
-    iterator end() { return iterator(this, cap_); }
-    const_iterator begin() const { return const_iterator(this, 0); }
-    const_iterator end() const { return const_iterator(this, cap_); }
-    const_iterator cbegin() const { return begin(); }
-    const_iterator cend() const { return end(); }
+    size_t slotCount() const noexcept
+    {
+      return cap_;
+    }
+
+    bool empty() const noexcept
+    {
+      return size_ == 0;
+    }
+
+    iterator begin()
+    {
+      return iterator(this, 0);
+    }
+
+    iterator end()
+    {
+      return iterator(this, cap_);
+    }
+
+    const_iterator begin() const
+    {
+      return const_iterator(this, 0);
+    }
+
+    const_iterator end() const
+    {
+      return const_iterator(this, cap_);
+    }
+
+    const_iterator cbegin() const
+    {
+      return begin();
+    }
+
+    const_iterator cend() const
+    {
+      return end();
+    }
 
     void swap(HashTable &rhs) noexcept
     {
