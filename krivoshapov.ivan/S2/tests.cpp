@@ -123,4 +123,60 @@ namespace
     }
     assert(threw);
   }
+
+  void ok(const std::string &e, size_t v)
+  {
+    assert(krivoshapov::evaluate(e) == v);
+  }
+
+  void bad(const std::string &e)
+  {
+    bool threw = false;
+    try
+    {
+      krivoshapov::evaluate(e);
+    }
+    catch (const std::invalid_argument &)
+    {
+      threw = true;
+    }
+    assert(threw);
+  }
+
+  void test_eval()
+  {
+    ok("1 + 3", 4);
+    ok("4 * 7 - 3", 25);
+    ok("( 10 / ( 2 + 3 ) % 4 )", 2);
+    ok("5 | 2 + 1", 7);
+    ok("1 + 2 | 4", 7);
+    ok("6 | 1 * 2", 6);
+    ok("( ( 7 | 8 ) + 1 ) * 2", 32);
+    ok("42", 42);
+    ok("0 | 0", 0);
+
+    bad("3 - 4");
+    bad("5 / 0");
+    bad("5 % 0");
+    bad("2 + x");
+    bad("1 2 +");
+    bad("1 + + 2");
+    bad("( )");
+    bad("1 +");
+    bad("( 1 + 2");
+    bad("1 + 2 )");
+
+    assert(krivoshapov::is_blank(""));
+    assert(krivoshapov::is_blank("   \t\r"));
+    assert(!krivoshapov::is_blank(" 1 "));
+    assert(!krivoshapov::is_blank("0"));
+  }
+}
+
+int main()
+{
+  test_stack();
+  test_queue();
+  test_eval();
+  return 0;
 }
