@@ -37,6 +37,35 @@ namespace krivoshapov
       ++count_;
     }
 
+    void pop()
+    {
+      if (count_ == 0)
+      {
+        throw std::out_of_range("pop from empty queue");
+      }
+      data_[head_] = T();
+      head_ = (head_ + 1) % cap_;
+      --count_;
+    }
+
+    T &front()
+    {
+      if (count_ == 0)
+      {
+        throw std::out_of_range("front from empty queue");
+      }
+      return data_[head_];
+    }
+
+    const T &front() const
+    {
+      if (count_ == 0)
+      {
+        throw std::out_of_range("front from empty queue");
+      }
+      return data_[head_];
+    }
+
   private:
     T *data_;
     size_t head_;
