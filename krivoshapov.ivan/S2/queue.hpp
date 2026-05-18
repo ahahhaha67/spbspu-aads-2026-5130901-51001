@@ -23,6 +23,20 @@ namespace krivoshapov
       deallocate(data_);
     }
 
+    void push(const T &value)
+    {
+      ensure();
+      data_[(head_ + count_) % cap_] = value;
+      ++count_;
+    }
+
+    void push(T &&value)
+    {
+      ensure();
+      data_[(head_ + count_) % cap_] = std::move(value);
+      ++count_;
+    }
+
   private:
     T *data_;
     size_t head_;
@@ -31,6 +45,32 @@ namespace krivoshapov
 
     static T *allocate(size_t n) { return new T[n](); }
     static void deallocate(T *p) noexcept { delete[] p; }
+
+    void ensure()
+    {
+      if (count_ < cap_)
+      {
+        return;
+      }
+      size_t ncap = (cap_ == 0) ? 8 : cap_ * 2;
+      T *buf = allocate(ncap);
+      try
+      {
+        for (size_t i = 0; i < count_; ++i)
+        {
+          buf[i] = std::move_if_noexcept(data_[(head_ + i) % cap_]);
+        }
+      }
+      catch (...)
+      {
+        deallocate(buf);
+        throw;
+      }
+      deallocate(data_);
+      data_ = buf;
+      head_ = 0;
+      cap_ = ncap;
+    }
   };
 }
 
