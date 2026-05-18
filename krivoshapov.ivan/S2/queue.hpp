@@ -18,9 +18,74 @@ namespace krivoshapov
     {
     }
 
+    Queue(const Queue &rhs) : data_(nullptr),
+                              head_(0),
+                              count_(0),
+                              cap_(0)
+    {
+      if (rhs.count_ != 0)
+      {
+        T *buf = allocate(rhs.count_);
+        try
+        {
+          for (size_t i = 0; i < rhs.count_; ++i)
+          {
+            buf[i] = rhs.data_[(rhs.head_ + i) % rhs.cap_];
+          }
+        }
+        catch (...)
+        {
+          deallocate(buf);
+          throw;
+        }
+        data_ = buf;
+        head_ = 0;
+        count_ = rhs.count_;
+        cap_ = rhs.count_;
+      }
+    }
+
+    Queue(Queue &&rhs) noexcept : data_(rhs.data_),
+                                  head_(rhs.head_),
+                                  count_(rhs.count_),
+                                  cap_(rhs.cap_)
+    {
+      rhs.data_ = nullptr;
+      rhs.head_ = 0;
+      rhs.count_ = 0;
+      rhs.cap_ = 0;
+    }
+
     ~Queue()
     {
       deallocate(data_);
+    }
+
+    Queue &operator=(const Queue &rhs)
+    {
+      if (this != &rhs)
+      {
+        Queue tmp(rhs);
+        swap(tmp);
+      }
+      return *this;
+    }
+
+    Queue &operator=(Queue &&rhs) noexcept
+    {
+      if (this != &rhs)
+      {
+        deallocate(data_);
+        data_ = rhs.data_;
+        head_ = rhs.head_;
+        count_ = rhs.count_;
+        cap_ = rhs.cap_;
+        rhs.data_ = nullptr;
+        rhs.head_ = 0;
+        rhs.count_ = 0;
+        rhs.cap_ = 0;
+      }
+      return *this;
     }
 
     void push(const T &value)
