@@ -1,4 +1,4 @@
-#include "calc.cpp"
+#include "calc.hpp"
 #include <cassert>
 
 namespace
