@@ -33,12 +33,55 @@ namespace krivoshapov
 
     HashTable() : HashTable(8) {}
 
+    HashTable(const HashTable &rhs) : HashTable(rhs.cap_)
+    {
+      for (size_t i = 0; i < rhs.cap_; ++i)
+      {
+        if (rhs.slots_[i].st == OCCUPIED)
+        {
+          add(rhs.slots_[i].key, rhs.slots_[i].val);
+        }
+      }
+    }
+
+    HashTable(HashTable &&rhs) noexcept : slots_(rhs.slots_), cap_(rhs.cap_), size_(rhs.size_), tomb_(rhs.tomb_)
+    {
+      rhs.slots_ = nullptr;
+      rhs.cap_ = 0;
+      rhs.size_ = 0;
+      rhs.tomb_ = 0;
+    }
+
+    HashTable &operator=(const HashTable &rhs)
+    {
+      if (this != &rhs)
+      {
+        HashTable tmp(rhs);
+        swap(tmp);
+      }
+      return *this;
+    }
+
+    HashTable &operator=(HashTable &&rhs) noexcept
+    {
+      if (this != &rhs)
+      {
+        delete[] slots_;
+        slots_ = rhs.slots_;
+        cap_ = rhs.cap_;
+        size_ = rhs.size_;
+        tomb_ = rhs.tomb_;
+        rhs.slots_ = nullptr;
+        rhs.cap_ = 0;
+        rhs.size_ = 0;
+        rhs.tomb_ = 0;
+      }
+      return *this;
+    }
+
     ~HashTable() { delete[] slots_; }
 
-    bool has(const Key &k) const
-    {
-      return findIndex(k) != cap_;
-    }
+    bool has(const Key &k) const { return findIndex(k) != cap_; }
 
     void add(const Key &k, const Value &v)
     {
@@ -103,8 +146,33 @@ namespace krivoshapov
       return slots_[i].val;
     }
 
+    void rehash(size_t slots)
+    {
+      if (slots <= size_)
+      {
+        slots = size_ + 1;
+      }
+      HashTable tmp(slots);
+      for (size_t i = 0; i < cap_; ++i)
+      {
+        if (slots_[i].st == OCCUPIED)
+        {
+          tmp.add(slots_[i].key, slots_[i].val);
+        }
+      }
+      swap(tmp);
+    }
+
     size_t size() const noexcept { return size_; }
     size_t slotCount() const noexcept { return cap_; }
+
+    void swap(HashTable &rhs) noexcept
+    {
+      std::swap(slots_, rhs.slots_);
+      std::swap(cap_, rhs.cap_);
+      std::swap(size_, rhs.size_);
+      std::swap(tomb_, rhs.tomb_);
+    }
 
   private:
     Slot *slots_;
