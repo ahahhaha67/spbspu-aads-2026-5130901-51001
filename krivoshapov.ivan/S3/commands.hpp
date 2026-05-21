@@ -36,6 +36,11 @@ namespace krivoshapov
 
     inline void printAdjacency(std::ostream &out, const Graph::Adjacency &adj)
     {
+      if (adj.size() == 0)
+      {
+        out << "\n";
+        return;
+      }
       for (size_t i = 0; i < adj.size(); ++i)
       {
         out << adj[i].first;
@@ -56,6 +61,11 @@ namespace krivoshapov
       }
       names.sort([](const std::string &a, const std::string &b)
                  { return a < b; });
+      if (names.size() == 0)
+      {
+        out << "\n";
+        return;
+      }
       for (size_t i = 0; i < names.size(); ++i)
       {
         out << names[i] << "\n";
@@ -70,6 +80,11 @@ namespace krivoshapov
         return;
       }
       Graph::NameList v = s.at(t[1]).vertices();
+      if (v.size() == 0)
+      {
+        out << "\n";
+        return;
+      }
       for (size_t i = 0; i < v.size(); ++i)
       {
         out << v[i] << "\n";
