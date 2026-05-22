@@ -135,63 +135,43 @@ namespace krivoshapov
     using iterator = BSTIterator<Key, Value>;
     using const_iterator = BSTConstIterator<Key, Value>;
 
-    BSTree() : fake_leaf_(new Node()),
-               fake_root_(new Node())
+    BSTree() : fake_leaf_(new Node()), fake_root_(new Node()) { initSentinels(); }
+
+    BSTree(const BSTree &rhs) : BSTree()
     {
-      initSentinels();
+      fake_root_->left_ =
+          copySubtree(rhs.fake_root_->left_, rhs.fake_leaf_, fake_root_);
     }
 
-    ~BSTree()
+    BSTree(BSTree &&rhs) noexcept : fake_leaf_(rhs.fake_leaf_), fake_root_(rhs.fake_root_)
     {
-      if (fake_root_ != nullptr)
+      rhs.fake_leaf_ = nullptr;
+      rhs.fake_root_ = nullptr;
+    }
+
+    BSTree &operator=(const BSTree &rhs)
+    {
+      if (this != &rhs)
+      {
+        BSTree tmp(rhs);
+        swap(tmp);
+      }
+      return *this;
+    }
+
+    BSTree &operator=(BSTree &&rhs) noexcept
+    {
+      if (this != &rhs)
       {
         destroyTree();
+        fake_leaf_ = rhs.fake_leaf_;
+        fake_root_ = rhs.fake_root_;
+        rhs.fake_leaf_ = nullptr;
+        rhs.fake_root_ = nullptr;
       }
+      return *this;
     }
 
-  private:
-    Node *fake_leaf_;
-    Node *fake_root_;
-
-    void initSentinels()
-    {
-      fake_leaf_->left_ = fake_leaf_;
-      fake_leaf_->right_ = fake_leaf_;
-      fake_leaf_->parent_ = nullptr;
-      fake_root_->left_ = fake_leaf_;
-      fake_root_->right_ = fake_leaf_;
-      fake_root_->parent_ = nullptr;
-    }
-
-    void destroyTree()
-    {
-      clearSubtree(fake_root_->left_);
-      delete fake_root_;
-      delete fake_leaf_;
-      fake_root_ = nullptr;
-      fake_leaf_ = nullptr;
-    }
-
-    void clearSubtree(Node *n)
-    {
-      if (n == fake_leaf_)
-      {
-        return;
-      }
-      clearSubtree(n->left_);
-      clearSubtree(n->right_);
-      delete n;
-    }
-  };
-  template <class Key, class Value, class Compare>
-  class BSTree
-  {
-  public:
-    using Node = detail::BSTNode<Key, Value>;
-    using iterator = BSTIterator<Key, Value>;
-    using const_iterator = BSTConstIterator<Key, Value>;
-
-    BSTree() : fake_leaf_(new Node()), fake_root_(new Node()) { initSentinels(); }
     ~BSTree()
     {
       if (fake_root_ != nullptr)
@@ -235,28 +215,30 @@ namespace krivoshapov
           return;
         }
       }
-      Value &get(const Key &k)
-      {
-        Node *n = findNode(k);
-        if (n == fake_leaf_)
-        {
-          throw std::out_of_range("key not found");
-        }
-        return n->value_;
-      }
-
-      const Value &get(const Key &k) const
-      {
-        Node *n = findNode(k);
-        if (n == fake_leaf_)
-        {
-          throw std::out_of_range("key not found");
-        }
-        return n->value_;
-      }
-
-      bool has(const Key &k) const { return findNode(k) != fake_leaf_; }
     }
+
+    Value &get(const Key &k)
+    {
+      Node *n = findNode(k);
+      if (n == fake_leaf_)
+      {
+        throw std::out_of_range("key not found");
+      }
+      return n->value_;
+    }
+
+    const Value &get(const Key &k) const
+    {
+      Node *n = findNode(k);
+      if (n == fake_leaf_)
+      {
+        throw std::out_of_range("key not found");
+      }
+      return n->value_;
+    }
+
+    bool has(const Key &k) const { return findNode(k) != fake_leaf_; }
+
     Value drop(const Key &k)
     {
       Node *n = findNode(k);
@@ -268,6 +250,7 @@ namespace krivoshapov
       removeNode(n);
       return v;
     }
+
     bool empty() const noexcept
     {
       return fake_root_ == nullptr || fake_root_->left_ == fake_leaf_;
@@ -304,46 +287,11 @@ namespace krivoshapov
     const_iterator cbegin() const { return begin(); }
     const_iterator cend() const { return end(); }
 
-    BSTree(const BSTree &rhs) : BSTree()
-    {
-      fake_root_->left_ =
-          copySubtree(rhs.fake_root_->left_, rhs.fake_leaf_, fake_root_);
-    }
-
-    BSTree &operator=(const BSTree &rhs)
-    {
-      if (this != &rhs)
-      {
-        BSTree tmp(rhs);
-        swap(tmp);
-      }
-      return *this;
-    }
-    BSTree(BSTree &&rhs) noexcept : fake_leaf_(rhs.fake_leaf_),
-                                    fake_root_(rhs.fake_root_)
-    {
-      rhs.fake_leaf_ = nullptr;
-      rhs.fake_root_ = nullptr;
-    }
-
-    BSTree &operator=(BSTree &&rhs) noexcept
-    {
-      if (this != &rhs)
-      {
-        destroyTree();
-        fake_leaf_ = rhs.fake_leaf_;
-        fake_root_ = rhs.fake_root_;
-        rhs.fake_leaf_ = nullptr;
-        rhs.fake_root_ = nullptr;
-      }
-      return *this;
-    }
     const_iterator rotateLeft(const_iterator it)
     {
       doRotateLeft(it.node_);
       return it;
     }
-
     const_iterator rotateRight(const_iterator it)
     {
       doRotateRight(it.node_);
@@ -355,7 +303,6 @@ namespace krivoshapov
       doRotateLeft(it.node_);
       return it;
     }
-
     const_iterator rotateLargeRight(const_iterator it)
     {
       doRotateLeft(it.node_);
@@ -363,9 +310,51 @@ namespace krivoshapov
       return it;
     }
 
+    size_t height() const { return heightImpl(fake_root_->left_); }
+
+    size_t height(const_iterator it) const
+    {
+      if (it == cend())
+      {
+        return 0;
+      }
+      return heightImpl(it.node_);
+    }
+
   private:
     Node *fake_leaf_;
     Node *fake_root_;
+
+    void initSentinels()
+    {
+      fake_leaf_->left_ = fake_leaf_;
+      fake_leaf_->right_ = fake_leaf_;
+      fake_leaf_->parent_ = nullptr;
+      fake_root_->left_ = fake_leaf_;
+      fake_root_->right_ = fake_leaf_;
+      fake_root_->parent_ = nullptr;
+    }
+
+    void destroyTree()
+    {
+      clearSubtree(fake_root_->left_);
+      delete fake_root_;
+      delete fake_leaf_;
+      fake_root_ = nullptr;
+      fake_leaf_ = nullptr;
+    }
+
+    void clearSubtree(Node *n)
+    {
+      if (n == fake_leaf_)
+      {
+        return;
+      }
+      clearSubtree(n->left_);
+      clearSubtree(n->right_);
+      delete n;
+    }
+
     Node *findNode(const Key &k) const
     {
       Node *cur = fake_root_->left_;
@@ -386,6 +375,20 @@ namespace krivoshapov
       }
       return fake_leaf_;
     }
+
+    Node *leftmost(Node *n) const
+    {
+      if (n == fake_leaf_)
+      {
+        return fake_root_;
+      }
+      while (n->left_ != fake_leaf_)
+      {
+        n = n->left_;
+      }
+      return n;
+    }
+
     void replaceChild(Node *parent, Node *oldChild, Node *newChild)
     {
       if (parent->left_ == oldChild)
@@ -420,18 +423,7 @@ namespace krivoshapov
       replaceChild(n->parent_, n, child);
       delete n;
     }
-    Node *leftmost(Node *n) const
-    {
-      if (n == fake_leaf_)
-      {
-        return fake_root_;
-      }
-      while (n->left_ != fake_leaf_)
-      {
-        n = n->left_;
-      }
-      return n;
-    }
+
     Node *copySubtree(Node *src, Node *srcFakeLeaf, Node *parent)
     {
       if (src == srcFakeLeaf)
@@ -451,10 +443,10 @@ namespace krivoshapov
       }
       return n;
     }
+
     void doRotateLeft(Node *x)
     {
-      Node *p = x->parent_;
-      Node *gp = p->parent_;
+      Node *p = x->parent_, *gp = p->parent_;
       p->right_ = x->left_;
       if (x->left_ != fake_leaf_)
       {
@@ -468,8 +460,7 @@ namespace krivoshapov
 
     void doRotateRight(Node *x)
     {
-      Node *p = x->parent_;
-      Node *gp = p->parent_;
+      Node *p = x->parent_, *gp = p->parent_;
       p->left_ = x->right_;
       if (x->right_ != fake_leaf_)
       {
@@ -479,6 +470,17 @@ namespace krivoshapov
       p->parent_ = x;
       x->parent_ = gp;
       (gp->left_ == p ? gp->left_ : gp->right_) = x;
+    }
+
+    size_t heightImpl(Node *n) const
+    {
+      if (n == fake_leaf_)
+      {
+        return 0;
+      }
+      const size_t lh = heightImpl(n->left_);
+      const size_t rh = heightImpl(n->right_);
+      return 1 + (lh > rh ? lh : rh);
     }
   };
 }
