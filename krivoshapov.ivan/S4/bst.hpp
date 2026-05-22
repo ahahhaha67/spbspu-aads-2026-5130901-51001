@@ -338,6 +338,17 @@ namespace krivoshapov
       }
       return *this;
     }
+    const_iterator rotateLeft(const_iterator it)
+    {
+      doRotateLeft(it.node_);
+      return it;
+    }
+
+    const_iterator rotateRight(const_iterator it)
+    {
+      doRotateRight(it.node_);
+      return it;
+    }
 
   private:
     Node *fake_leaf_;
@@ -426,6 +437,35 @@ namespace krivoshapov
         throw;
       }
       return n;
+    }
+    void doRotateLeft(Node *x)
+    {
+      Node *p = x->parent_;
+      Node *gp = p->parent_;
+      p->right_ = x->left_;
+      if (x->left_ != fake_leaf_)
+      {
+        x->left_->parent_ = p;
+      }
+      x->left_ = p;
+      p->parent_ = x;
+      x->parent_ = gp;
+      (gp->left_ == p ? gp->left_ : gp->right_) = x;
+    }
+
+    void doRotateRight(Node *x)
+    {
+      Node *p = x->parent_;
+      Node *gp = p->parent_;
+      p->left_ = x->right_;
+      if (x->right_ != fake_leaf_)
+      {
+        x->right_->parent_ = p;
+      }
+      x->right_ = p;
+      p->parent_ = x;
+      x->parent_ = gp;
+      (gp->left_ == p ? gp->left_ : gp->right_) = x;
     }
   };
 }
