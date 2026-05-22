@@ -29,7 +29,30 @@ namespace krivoshapov
         s.rehash(s.slotCount() * 2);
       }
     }
-  } // namespace detail
+
+    inline void cmdPrint(DatasetStore &s,
+                         const Array<std::string> &t,
+                         std::ostream &out)
+    {
+      if (t.size() != 2 || !s.has(t[1]))
+      {
+        out << "<INVALID COMMAND>\n";
+        return;
+      }
+      const Dict &d = s.at(t[1]);
+      if (d.empty())
+      {
+        out << "<EMPTY>\n";
+        return;
+      }
+      out << t[1];
+      for (auto it = d.cbegin(); it != d.cend(); ++it)
+      {
+        out << ' ' << it.key() << ' ' << it.value();
+      }
+      out << '\n';
+    }
+  }
 
   inline void loadDatasets(std::istream &in, DatasetStore &store)
   {
