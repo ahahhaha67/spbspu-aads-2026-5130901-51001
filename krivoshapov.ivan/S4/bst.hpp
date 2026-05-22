@@ -183,6 +183,64 @@ namespace krivoshapov
       delete n;
     }
   };
+  template <class Key, class Value, class Compare>
+  class BSTree
+  {
+  public:
+    using Node = detail::BSTNode<Key, Value>;
+    using iterator = BSTIterator<Key, Value>;
+    using const_iterator = BSTConstIterator<Key, Value>;
+
+    BSTree() : fake_leaf_(new Node()), fake_root_(new Node()) { initSentinels(); }
+    ~BSTree()
+    {
+      if (fake_root_ != nullptr)
+      {
+        destroyTree();
+      }
+    }
+
+    void push(const Key &k, const Value &v)
+    {
+      Node *root = fake_root_->left_;
+      if (root == fake_leaf_)
+      {
+        fake_root_->left_ = new Node(k, v, fake_leaf_, fake_leaf_, fake_root_);
+        return;
+      }
+      Node *cur = root;
+      for (;;)
+      {
+        if (Compare()(k, cur->key_))
+        {
+          if (cur->left_ == fake_leaf_)
+          {
+            cur->left_ = new Node(k, v, fake_leaf_, fake_leaf_, cur);
+            return;
+          }
+          cur = cur->left_;
+        }
+        else if (Compare()(cur->key_, k))
+        {
+          if (cur->right_ == fake_leaf_)
+          {
+            cur->right_ = new Node(k, v, fake_leaf_, fake_leaf_, cur);
+            return;
+          }
+          cur = cur->right_;
+        }
+        else
+        {
+          cur->value_ = v;
+          return;
+        }
+      }
+    }
+
+  private:
+    Node *fake_leaf_;
+    Node *fake_root_;
+  };
 }
 
 #endif
