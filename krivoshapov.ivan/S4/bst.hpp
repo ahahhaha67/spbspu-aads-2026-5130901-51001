@@ -1,0 +1,488 @@
+#ifndef KRIVOSHAPOV_BST_HPP
+#define KRIVOSHAPOV_BST_HPP
+
+#include <cstddef>
+#include <stdexcept>
+#include <utility>
+
+namespace krivoshapov
+{
+  namespace detail
+  {
+    template <class Key, class Value>
+    struct BSTNode
+    {
+      Key key_;
+      Value value_;
+      BSTNode *left_;
+      BSTNode *right_;
+      BSTNode *parent_;
+
+      BSTNode() : key_(), value_(), left_(nullptr), right_(nullptr), parent_(nullptr)
+      {
+      }
+
+      BSTNode(const Key &k, const Value &v,
+              BSTNode *l, BSTNode *r, BSTNode *p) : key_(k), value_(v), left_(l), right_(r), parent_(p)
+      {
+      }
+    };
+  }
+
+  template <class Key, class Value>
+  class BSTConstIterator;
+
+  template <class Key, class Value>
+  class BSTIterator
+  {
+    template <class K, class V, class C>
+    friend class BSTree;
+    friend class BSTConstIterator<Key, Value>;
+
+  public:
+    using Node = detail::BSTNode<Key, Value>;
+    const Key &key() const { return node_->key_; }
+    Value &value() { return node_->value_; }
+    const Value &value() const { return node_->value_; }
+    BSTIterator &operator++()
+    {
+      if (node_->right_ != fake_leaf_)
+      {
+        node_ = node_->right_;
+        while (node_->left_ != fake_leaf_)
+        {
+          node_ = node_->left_;
+        }
+      }
+      else
+      {
+        while (node_->parent_ != nullptr && node_ == node_->parent_->right_)
+        {
+          node_ = node_->parent_;
+        }
+        node_ = node_->parent_;
+      }
+      return *this;
+    }
+    BSTIterator operator++(int)
+    {
+      BSTIterator tmp = *this;
+      ++(*this);
+      return tmp;
+    }
+    bool operator==(const BSTIterator &rhs) const { return node_ == rhs.node_; }
+    bool operator!=(const BSTIterator &rhs) const { return node_ != rhs.node_; }
+
+  private:
+    Node *node_;
+    Node *fake_root_;
+    Node *fake_leaf_;
+    BSTIterator(Node *n, Node *fr, Node *fl) : node_(n), fake_root_(fr), fake_leaf_(fl) {}
+  };
+
+  template <class Key, class Value>
+  class BSTConstIterator
+  {
+    template <class K, class V, class C>
+    friend class BSTree;
+
+  public:
+    using Node = detail::BSTNode<Key, Value>;
+    BSTConstIterator(const BSTIterator<Key, Value> &it) : node_(it.node_), fake_root_(it.fake_root_), fake_leaf_(it.fake_leaf_) {}
+    const Key &key() const { return node_->key_; }
+    const Value &value() const { return node_->value_; }
+    BSTConstIterator &operator++()
+    {
+      if (node_->right_ != fake_leaf_)
+      {
+        node_ = node_->right_;
+        while (node_->left_ != fake_leaf_)
+        {
+          node_ = node_->left_;
+        }
+      }
+      else
+      {
+        while (node_->parent_ != nullptr && node_ == node_->parent_->right_)
+        {
+          node_ = node_->parent_;
+        }
+        node_ = node_->parent_;
+      }
+      return *this;
+    }
+    BSTConstIterator operator++(int)
+    {
+      BSTConstIterator tmp = *this;
+      ++(*this);
+      return tmp;
+    }
+    bool operator==(const BSTConstIterator &rhs) const { return node_ == rhs.node_; }
+    bool operator!=(const BSTConstIterator &rhs) const { return node_ != rhs.node_; }
+
+  private:
+    Node *node_;
+    Node *fake_root_;
+    Node *fake_leaf_;
+    BSTConstIterator(Node *n, Node *fr, Node *fl) : node_(n), fake_root_(fr), fake_leaf_(fl) {}
+  };
+
+  template <class Key, class Value, class Compare>
+  class BSTree
+  {
+  public:
+    using Node = detail::BSTNode<Key, Value>;
+    using iterator = BSTIterator<Key, Value>;
+    using const_iterator = BSTConstIterator<Key, Value>;
+
+    BSTree() : fake_leaf_(new Node()), fake_root_(new Node()) { initSentinels(); }
+
+    BSTree(const BSTree &rhs) : BSTree()
+    {
+      fake_root_->left_ =
+          copySubtree(rhs.fake_root_->left_, rhs.fake_leaf_, fake_root_);
+    }
+
+    BSTree(BSTree &&rhs) noexcept : fake_leaf_(rhs.fake_leaf_), fake_root_(rhs.fake_root_)
+    {
+      rhs.fake_leaf_ = nullptr;
+      rhs.fake_root_ = nullptr;
+    }
+
+    BSTree &operator=(const BSTree &rhs)
+    {
+      if (this != &rhs)
+      {
+        BSTree tmp(rhs);
+        swap(tmp);
+      }
+      return *this;
+    }
+
+    BSTree &operator=(BSTree &&rhs) noexcept
+    {
+      if (this != &rhs)
+      {
+        destroyTree();
+        fake_leaf_ = rhs.fake_leaf_;
+        fake_root_ = rhs.fake_root_;
+        rhs.fake_leaf_ = nullptr;
+        rhs.fake_root_ = nullptr;
+      }
+      return *this;
+    }
+
+    ~BSTree()
+    {
+      if (fake_root_ != nullptr)
+      {
+        destroyTree();
+      }
+    }
+
+    void push(const Key &k, const Value &v)
+    {
+      Node *root = fake_root_->left_;
+      if (root == fake_leaf_)
+      {
+        fake_root_->left_ = new Node(k, v, fake_leaf_, fake_leaf_, fake_root_);
+        return;
+      }
+      Node *cur = root;
+      for (;;)
+      {
+        if (Compare()(k, cur->key_))
+        {
+          if (cur->left_ == fake_leaf_)
+          {
+            cur->left_ = new Node(k, v, fake_leaf_, fake_leaf_, cur);
+            return;
+          }
+          cur = cur->left_;
+        }
+        else if (Compare()(cur->key_, k))
+        {
+          if (cur->right_ == fake_leaf_)
+          {
+            cur->right_ = new Node(k, v, fake_leaf_, fake_leaf_, cur);
+            return;
+          }
+          cur = cur->right_;
+        }
+        else
+        {
+          cur->value_ = v;
+          return;
+        }
+      }
+    }
+
+    Value &get(const Key &k)
+    {
+      Node *n = findNode(k);
+      if (n == fake_leaf_)
+      {
+        throw std::out_of_range("key not found");
+      }
+      return n->value_;
+    }
+
+    const Value &get(const Key &k) const
+    {
+      Node *n = findNode(k);
+      if (n == fake_leaf_)
+      {
+        throw std::out_of_range("key not found");
+      }
+      return n->value_;
+    }
+
+    bool has(const Key &k) const { return findNode(k) != fake_leaf_; }
+
+    Value drop(const Key &k)
+    {
+      Node *n = findNode(k);
+      if (n == fake_leaf_)
+      {
+        throw std::out_of_range("key not found");
+      }
+      Value v = n->value_;
+      removeNode(n);
+      return v;
+    }
+
+    bool empty() const noexcept
+    {
+      return fake_root_ == nullptr || fake_root_->left_ == fake_leaf_;
+    }
+
+    void clear() noexcept
+    {
+      clearSubtree(fake_root_->left_);
+      fake_root_->left_ = fake_leaf_;
+    }
+
+    void swap(BSTree &rhs) noexcept
+    {
+      std::swap(fake_leaf_, rhs.fake_leaf_);
+      std::swap(fake_root_, rhs.fake_root_);
+    }
+
+    iterator begin()
+    {
+      return iterator(leftmost(fake_root_->left_), fake_root_, fake_leaf_);
+    }
+    iterator end()
+    {
+      return iterator(fake_root_, fake_root_, fake_leaf_);
+    }
+    const_iterator begin() const
+    {
+      return const_iterator(leftmost(fake_root_->left_), fake_root_, fake_leaf_);
+    }
+    const_iterator end() const
+    {
+      return const_iterator(fake_root_, fake_root_, fake_leaf_);
+    }
+    const_iterator cbegin() const { return begin(); }
+    const_iterator cend() const { return end(); }
+
+    const_iterator rotateLeft(const_iterator it)
+    {
+      doRotateLeft(it.node_);
+      return it;
+    }
+    const_iterator rotateRight(const_iterator it)
+    {
+      doRotateRight(it.node_);
+      return it;
+    }
+    const_iterator rotateLargeLeft(const_iterator it)
+    {
+      doRotateRight(it.node_);
+      doRotateLeft(it.node_);
+      return it;
+    }
+    const_iterator rotateLargeRight(const_iterator it)
+    {
+      doRotateLeft(it.node_);
+      doRotateRight(it.node_);
+      return it;
+    }
+
+    size_t height() const { return heightImpl(fake_root_->left_); }
+
+    size_t height(const_iterator it) const
+    {
+      if (it == cend())
+      {
+        return 0;
+      }
+      return heightImpl(it.node_);
+    }
+
+  private:
+    Node *fake_leaf_;
+    Node *fake_root_;
+
+    void initSentinels()
+    {
+      fake_leaf_->left_ = fake_leaf_;
+      fake_leaf_->right_ = fake_leaf_;
+      fake_leaf_->parent_ = nullptr;
+      fake_root_->left_ = fake_leaf_;
+      fake_root_->right_ = fake_leaf_;
+      fake_root_->parent_ = nullptr;
+    }
+
+    void destroyTree()
+    {
+      clearSubtree(fake_root_->left_);
+      delete fake_root_;
+      delete fake_leaf_;
+      fake_root_ = nullptr;
+      fake_leaf_ = nullptr;
+    }
+
+    void clearSubtree(Node *n)
+    {
+      if (n == fake_leaf_)
+      {
+        return;
+      }
+      clearSubtree(n->left_);
+      clearSubtree(n->right_);
+      delete n;
+    }
+
+    Node *findNode(const Key &k) const
+    {
+      Node *cur = fake_root_->left_;
+      while (cur != fake_leaf_)
+      {
+        if (Compare()(k, cur->key_))
+        {
+          cur = cur->left_;
+        }
+        else if (Compare()(cur->key_, k))
+        {
+          cur = cur->right_;
+        }
+        else
+        {
+          return cur;
+        }
+      }
+      return fake_leaf_;
+    }
+
+    Node *leftmost(Node *n) const
+    {
+      if (n == fake_leaf_)
+      {
+        return fake_root_;
+      }
+      while (n->left_ != fake_leaf_)
+      {
+        n = n->left_;
+      }
+      return n;
+    }
+
+    void replaceChild(Node *parent, Node *oldChild, Node *newChild)
+    {
+      if (parent->left_ == oldChild)
+      {
+        parent->left_ = newChild;
+      }
+      else
+      {
+        parent->right_ = newChild;
+      }
+      if (newChild != fake_leaf_)
+      {
+        newChild->parent_ = parent;
+      }
+    }
+
+    void removeNode(Node *n)
+    {
+      if (n->left_ != fake_leaf_ && n->right_ != fake_leaf_)
+      {
+        Node *s = n->right_;
+        while (s->left_ != fake_leaf_)
+        {
+          s = s->left_;
+        }
+        n->key_ = s->key_;
+        n->value_ = s->value_;
+        removeNode(s);
+        return;
+      }
+      Node *child = (n->left_ != fake_leaf_) ? n->left_ : n->right_;
+      replaceChild(n->parent_, n, child);
+      delete n;
+    }
+
+    Node *copySubtree(Node *src, Node *srcFakeLeaf, Node *parent)
+    {
+      if (src == srcFakeLeaf)
+      {
+        return fake_leaf_;
+      }
+      Node *n = new Node(src->key_, src->value_, fake_leaf_, fake_leaf_, parent);
+      try
+      {
+        n->left_ = copySubtree(src->left_, srcFakeLeaf, n);
+        n->right_ = copySubtree(src->right_, srcFakeLeaf, n);
+      }
+      catch (...)
+      {
+        clearSubtree(n);
+        throw;
+      }
+      return n;
+    }
+
+    void doRotateLeft(Node *x)
+    {
+      Node *p = x->parent_, *gp = p->parent_;
+      p->right_ = x->left_;
+      if (x->left_ != fake_leaf_)
+      {
+        x->left_->parent_ = p;
+      }
+      x->left_ = p;
+      p->parent_ = x;
+      x->parent_ = gp;
+      (gp->left_ == p ? gp->left_ : gp->right_) = x;
+    }
+
+    void doRotateRight(Node *x)
+    {
+      Node *p = x->parent_, *gp = p->parent_;
+      p->left_ = x->right_;
+      if (x->right_ != fake_leaf_)
+      {
+        x->right_->parent_ = p;
+      }
+      x->right_ = p;
+      p->parent_ = x;
+      x->parent_ = gp;
+      (gp->left_ == p ? gp->left_ : gp->right_) = x;
+    }
+
+    size_t heightImpl(Node *n) const
+    {
+      if (n == fake_leaf_)
+      {
+        return 0;
+      }
+      const size_t lh = heightImpl(n->left_);
+      const size_t rh = heightImpl(n->right_);
+      return 1 + (lh > rh ? lh : rh);
+    }
+  };
+}
+
+#endif
