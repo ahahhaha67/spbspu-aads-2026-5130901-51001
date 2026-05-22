@@ -257,6 +257,17 @@ namespace krivoshapov
 
       bool has(const Key &k) const { return findNode(k) != fake_leaf_; }
     }
+    Value drop(const Key &k)
+    {
+      Node *n = findNode(k);
+      if (n == fake_leaf_)
+      {
+        throw std::out_of_range("key not found");
+      }
+      Value v = n->value_;
+      removeNode(n);
+      return v;
+    }
 
   private:
     Node *fake_leaf_;
@@ -280,6 +291,40 @@ namespace krivoshapov
         }
       }
       return fake_leaf_;
+    }
+    void replaceChild(Node *parent, Node *oldChild, Node *newChild)
+    {
+      if (parent->left_ == oldChild)
+      {
+        parent->left_ = newChild;
+      }
+      else
+      {
+        parent->right_ = newChild;
+      }
+      if (newChild != fake_leaf_)
+      {
+        newChild->parent_ = parent;
+      }
+    }
+
+    void removeNode(Node *n)
+    {
+      if (n->left_ != fake_leaf_ && n->right_ != fake_leaf_)
+      {
+        Node *s = n->right_;
+        while (s->left_ != fake_leaf_)
+        {
+          s = s->left_;
+        }
+        n->key_ = s->key_;
+        n->value_ = s->value_;
+        removeNode(s);
+        return;
+      }
+      Node *child = (n->left_ != fake_leaf_) ? n->left_ : n->right_;
+      replaceChild(n->parent_, n, child);
+      delete n;
     }
   };
 }
