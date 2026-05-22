@@ -57,7 +57,7 @@ namespace krivoshapov
                               const Array<std::string> &t,
                               std::ostream &out)
     {
-      if (t.size() != 4 || s.has(t[1]) || !s.has(t[2]) || !s.has(t[3]))
+      if (t.size() != 4 || !s.has(t[2]) || !s.has(t[3]))
       {
         out << "<INVALID COMMAND>\n";
         return;
@@ -78,7 +78,7 @@ namespace krivoshapov
                              const Array<std::string> &t,
                              std::ostream &out)
     {
-      if (t.size() != 4 || s.has(t[1]) || !s.has(t[2]) || !s.has(t[3]))
+      if (t.size() != 4 || !s.has(t[2]) || !s.has(t[3]))
       {
         out << "<INVALID COMMAND>\n";
         return;
@@ -99,7 +99,7 @@ namespace krivoshapov
                          const Array<std::string> &t,
                          std::ostream &out)
     {
-      if (t.size() != 4 || s.has(t[1]) || !s.has(t[2]) || !s.has(t[3]))
+      if (t.size() != 4 || !s.has(t[2]) || !s.has(t[3]))
       {
         out << "<INVALID COMMAND>\n";
         return;
