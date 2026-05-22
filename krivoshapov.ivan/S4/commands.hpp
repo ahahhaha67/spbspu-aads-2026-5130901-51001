@@ -52,6 +52,7 @@ namespace krivoshapov
       }
       out << '\n';
     }
+
     inline void cmdComplement(DatasetStore &s,
                               const Array<std::string> &t,
                               std::ostream &out)
@@ -61,9 +62,7 @@ namespace krivoshapov
         out << "<INVALID COMMAND>\n";
         return;
       }
-      Dict d1 = s.at(t[2]);
-      Dict d2 = s.at(t[3]);
-      Dict result;
+      Dict d1 = s.at(t[2]), d2 = s.at(t[3]), result;
       for (auto it = d1.cbegin(); it != d1.cend(); ++it)
       {
         if (!d2.has(it.key()))
@@ -74,6 +73,7 @@ namespace krivoshapov
       ensureStore(s);
       s.add(t[1], result);
     }
+
     inline void cmdIntersect(DatasetStore &s,
                              const Array<std::string> &t,
                              std::ostream &out)
@@ -83,9 +83,7 @@ namespace krivoshapov
         out << "<INVALID COMMAND>\n";
         return;
       }
-      Dict d1 = s.at(t[2]);
-      Dict d2 = s.at(t[3]);
-      Dict result;
+      Dict d1 = s.at(t[2]), d2 = s.at(t[3]), result;
       for (auto it = d1.cbegin(); it != d1.cend(); ++it)
       {
         if (d2.has(it.key()))
@@ -96,7 +94,32 @@ namespace krivoshapov
       ensureStore(s);
       s.add(t[1], result);
     }
-  }
+
+    inline void cmdUnion(DatasetStore &s,
+                         const Array<std::string> &t,
+                         std::ostream &out)
+    {
+      if (t.size() != 4 || s.has(t[1]) || !s.has(t[2]) || !s.has(t[3]))
+      {
+        out << "<INVALID COMMAND>\n";
+        return;
+      }
+      Dict d1 = s.at(t[2]), d2 = s.at(t[3]), result;
+      for (auto it = d1.cbegin(); it != d1.cend(); ++it)
+      {
+        result.push(it.key(), it.value());
+      }
+      for (auto it = d2.cbegin(); it != d2.cend(); ++it)
+      {
+        if (!result.has(it.key()))
+        {
+          result.push(it.key(), it.value());
+        }
+      }
+      ensureStore(s);
+      s.add(t[1], result);
+    }
+  } // namespace detail
 
   inline void loadDatasets(std::istream &in, DatasetStore &store)
   {
@@ -121,6 +144,35 @@ namespace krivoshapov
       }
       detail::ensureStore(store);
       store.add(tokens[0], dict);
+    }
+  }
+
+  inline void runCommands(std::istream &in,
+                          std::ostream &out,
+                          DatasetStore &store)
+  {
+    using Handler =
+        std::function<void(DatasetStore &, const Array<std::string> &, std::ostream &)>;
+    HashTable<std::string, Handler, StringHash, StringEqual> table(16);
+    table.add("print", detail::cmdPrint);
+    table.add("complement", detail::cmdComplement);
+    table.add("intersect", detail::cmdIntersect);
+    table.add("union", detail::cmdUnion);
+
+    std::string line;
+    while (std::getline(in, line))
+    {
+      Array<std::string> t = split(line);
+      if (t.size() == 0)
+      {
+        continue;
+      }
+      if (!table.has(t[0]))
+      {
+        out << "<INVALID COMMAND>\n";
+        continue;
+      }
+      table.at(t[0])(store, t, out);
     }
   }
 }
