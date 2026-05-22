@@ -74,6 +74,28 @@ namespace krivoshapov
       ensureStore(s);
       s.add(t[1], result);
     }
+    inline void cmdIntersect(DatasetStore &s,
+                             const Array<std::string> &t,
+                             std::ostream &out)
+    {
+      if (t.size() != 4 || s.has(t[1]) || !s.has(t[2]) || !s.has(t[3]))
+      {
+        out << "<INVALID COMMAND>\n";
+        return;
+      }
+      Dict d1 = s.at(t[2]);
+      Dict d2 = s.at(t[3]);
+      Dict result;
+      for (auto it = d1.cbegin(); it != d1.cend(); ++it)
+      {
+        if (d2.has(it.key()))
+        {
+          result.push(it.key(), it.value());
+        }
+      }
+      ensureStore(s);
+      s.add(t[1], result);
+    }
   }
 
   inline void loadDatasets(std::istream &in, DatasetStore &store)
