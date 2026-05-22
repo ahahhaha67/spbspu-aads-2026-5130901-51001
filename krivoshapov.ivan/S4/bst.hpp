@@ -319,6 +319,25 @@ namespace krivoshapov
       }
       return *this;
     }
+    BSTree(BSTree &&rhs) noexcept : fake_leaf_(rhs.fake_leaf_),
+                                    fake_root_(rhs.fake_root_)
+    {
+      rhs.fake_leaf_ = nullptr;
+      rhs.fake_root_ = nullptr;
+    }
+
+    BSTree &operator=(BSTree &&rhs) noexcept
+    {
+      if (this != &rhs)
+      {
+        destroyTree();
+        fake_leaf_ = rhs.fake_leaf_;
+        fake_root_ = rhs.fake_root_;
+        rhs.fake_leaf_ = nullptr;
+        rhs.fake_root_ = nullptr;
+      }
+      return *this;
+    }
 
   private:
     Node *fake_leaf_;
