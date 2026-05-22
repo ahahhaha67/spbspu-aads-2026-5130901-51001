@@ -349,6 +349,19 @@ namespace krivoshapov
       doRotateRight(it.node_);
       return it;
     }
+    const_iterator rotateLargeLeft(const_iterator it)
+    {
+      doRotateRight(it.node_);
+      doRotateLeft(it.node_);
+      return it;
+    }
+
+    const_iterator rotateLargeRight(const_iterator it)
+    {
+      doRotateLeft(it.node_);
+      doRotateRight(it.node_);
+      return it;
+    }
 
   private:
     Node *fake_leaf_;
