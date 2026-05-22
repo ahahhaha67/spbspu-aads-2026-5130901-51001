@@ -86,6 +86,63 @@ namespace krivoshapov
     {
     }
   };
+
+  template <class Key, class Value>
+  class BSTConstIterator
+  {
+    template <class K, class V, class C>
+    friend class BSTree;
+
+  public:
+    using Node = detail::BSTNode<Key, Value>;
+
+    BSTConstIterator(const BSTIterator<Key, Value> &it) : node_(it.node_), fake_root_(it.fake_root_), fake_leaf_(it.fake_leaf_)
+    {
+    }
+
+    const Key &key() const { return node_->key_; }
+    const Value &value() const { return node_->value_; }
+
+    BSTConstIterator &operator++()
+    {
+      if (node_->right_ != fake_leaf_)
+      {
+        node_ = node_->right_;
+        while (node_->left_ != fake_leaf_)
+        {
+          node_ = node_->left_;
+        }
+      }
+      else
+      {
+        while (node_->parent_ != nullptr && node_ == node_->parent_->right_)
+        {
+          node_ = node_->parent_;
+        }
+        node_ = node_->parent_;
+      }
+      return *this;
+    }
+
+    BSTConstIterator operator++(int)
+    {
+      BSTConstIterator tmp = *this;
+      ++(*this);
+      return tmp;
+    }
+
+    bool operator==(const BSTConstIterator &rhs) const { return node_ == rhs.node_; }
+    bool operator!=(const BSTConstIterator &rhs) const { return node_ != rhs.node_; }
+
+  private:
+    Node *node_;
+    Node *fake_root_;
+    Node *fake_leaf_;
+
+    BSTConstIterator(Node *n, Node *fr, Node *fl) : node_(n), fake_root_(fr), fake_leaf_(fl)
+    {
+    }
+  };
 }
 
 #endif
