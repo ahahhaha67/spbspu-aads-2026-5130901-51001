@@ -268,6 +268,41 @@ namespace krivoshapov
       removeNode(n);
       return v;
     }
+    bool empty() const noexcept
+    {
+      return fake_root_ == nullptr || fake_root_->left_ == fake_leaf_;
+    }
+
+    void clear() noexcept
+    {
+      clearSubtree(fake_root_->left_);
+      fake_root_->left_ = fake_leaf_;
+    }
+
+    void swap(BSTree &rhs) noexcept
+    {
+      std::swap(fake_leaf_, rhs.fake_leaf_);
+      std::swap(fake_root_, rhs.fake_root_);
+    }
+
+    iterator begin()
+    {
+      return iterator(leftmost(fake_root_->left_), fake_root_, fake_leaf_);
+    }
+    iterator end()
+    {
+      return iterator(fake_root_, fake_root_, fake_leaf_);
+    }
+    const_iterator begin() const
+    {
+      return const_iterator(leftmost(fake_root_->left_), fake_root_, fake_leaf_);
+    }
+    const_iterator end() const
+    {
+      return const_iterator(fake_root_, fake_root_, fake_leaf_);
+    }
+    const_iterator cbegin() const { return begin(); }
+    const_iterator cend() const { return end(); }
 
   private:
     Node *fake_leaf_;
@@ -325,6 +360,18 @@ namespace krivoshapov
       Node *child = (n->left_ != fake_leaf_) ? n->left_ : n->right_;
       replaceChild(n->parent_, n, child);
       delete n;
+    }
+    Node *leftmost(Node *n) const
+    {
+      if (n == fake_leaf_)
+      {
+        return fake_root_;
+      }
+      while (n->left_ != fake_leaf_)
+      {
+        n = n->left_;
+      }
+      return n;
     }
   };
 }
