@@ -235,11 +235,52 @@ namespace krivoshapov
           return;
         }
       }
+      Value &get(const Key &k)
+      {
+        Node *n = findNode(k);
+        if (n == fake_leaf_)
+        {
+          throw std::out_of_range("key not found");
+        }
+        return n->value_;
+      }
+
+      const Value &get(const Key &k) const
+      {
+        Node *n = findNode(k);
+        if (n == fake_leaf_)
+        {
+          throw std::out_of_range("key not found");
+        }
+        return n->value_;
+      }
+
+      bool has(const Key &k) const { return findNode(k) != fake_leaf_; }
     }
 
   private:
     Node *fake_leaf_;
     Node *fake_root_;
+    Node *findNode(const Key &k) const
+    {
+      Node *cur = fake_root_->left_;
+      while (cur != fake_leaf_)
+      {
+        if (Compare()(k, cur->key_))
+        {
+          cur = cur->left_;
+        }
+        else if (Compare()(cur->key_, k))
+        {
+          cur = cur->right_;
+        }
+        else
+        {
+          return cur;
+        }
+      }
+      return fake_leaf_;
+    }
   };
 }
 
