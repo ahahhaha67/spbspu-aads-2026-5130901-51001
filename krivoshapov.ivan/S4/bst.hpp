@@ -304,6 +304,22 @@ namespace krivoshapov
     const_iterator cbegin() const { return begin(); }
     const_iterator cend() const { return end(); }
 
+    BSTree(const BSTree &rhs) : BSTree()
+    {
+      fake_root_->left_ =
+          copySubtree(rhs.fake_root_->left_, rhs.fake_leaf_, fake_root_);
+    }
+
+    BSTree &operator=(const BSTree &rhs)
+    {
+      if (this != &rhs)
+      {
+        BSTree tmp(rhs);
+        swap(tmp);
+      }
+      return *this;
+    }
+
   private:
     Node *fake_leaf_;
     Node *fake_root_;
@@ -370,6 +386,25 @@ namespace krivoshapov
       while (n->left_ != fake_leaf_)
       {
         n = n->left_;
+      }
+      return n;
+    }
+    Node *copySubtree(Node *src, Node *srcFakeLeaf, Node *parent)
+    {
+      if (src == srcFakeLeaf)
+      {
+        return fake_leaf_;
+      }
+      Node *n = new Node(src->key_, src->value_, fake_leaf_, fake_leaf_, parent);
+      try
+      {
+        n->left_ = copySubtree(src->left_, srcFakeLeaf, n);
+        n->right_ = copySubtree(src->right_, srcFakeLeaf, n);
+      }
+      catch (...)
+      {
+        clearSubtree(n);
+        throw;
       }
       return n;
     }
